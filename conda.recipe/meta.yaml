@@ -1,0 +1,57 @@
+{% set name = "cupy" %}
+{% set version = "5.0.0b3" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://github.com/cupy/cupy/archive/655229d7fcf010d8c7933fbecb258b4a762ccb09.tar.gz
+  sha256: d2bf516616fc53203192f61325a3f880103d9605c4c49c64ba96792910f77cd7
+
+build:
+  number: 0
+  skip: true  # [not linux]
+  script:
+    - export CUDA="${CUDA_ROOT}"
+    - export CUDA_PATH="${CUDA_ROOT}"
+    - export NVCC="${CUDA_ROOT}/bin/nvcc"
+    - export CFLAGS="${CFLAGS} -std=c++11 -I${CUDA_ROOT}/include"
+    - export LDFLAGS="${LDFLAGS} -L${CUDA_ROOT}/lib64"
+    - "{{ PYTHON }} cupy_setup_build.py"
+    - "{{ PYTHON }} setup.py build_ext --inplace"
+    - "{{ PYTHON }} -m pip install {{ SRC_DIR }} --no-deps --ignore-installed --no-cache-dir -vvv"
+  script_env:
+    - CUDA_ROOT
+
+requirements:
+  build:
+    - {{ compiler("c") }}
+    - {{ compiler("cxx") }}
+  host:
+    - python
+    - setuptools
+    - pip
+    - cython >=0.28.0
+    - numpy 1.9.*
+    - fastrlock >=0.3
+  run:
+    - python
+    - {{ pin_compatible('numpy') }}
+    - fastrlock >=0.3
+    - six >=1.9.0
+
+test:
+  imports:
+    - cupy
+    - cupyx
+
+about:
+  home: https://docs-cupy.chainer.org/
+  license: MIT
+  license_file: LICENSE
+  summary: "CuPy: NumPy-like API accelerated with CUDA"
+
+  dev_url: https://github.com/cupy/cupy/
+  doc_url: https://docs-cupy.chainer.org/
